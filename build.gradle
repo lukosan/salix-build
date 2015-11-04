@@ -1,0 +1,89 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    ext {
+        springBootVersion = '1.2.7.RELEASE'
+		springCoreVersion = '4.2.0.RELEASE'
+		springSecurityVersion = '4.0.0.RELEASE'
+        salixVersion= '0.1.0-SNAPSHOT'
+    }
+    dependencies {
+        // spring boot
+    	classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+    }
+}
+
+plugins {
+	id "com.jfrog.bintray" version "1.3.1"
+}
+
+ext {
+	environment = project.hasProperty('env') ? env : 'dev'
+}
+
+allprojects {
+    repositories {
+		mavenCentral()
+		
+		jcenter {
+			url "http://jcenter.bintray.com/"
+		}
+    }
+}
+
+subprojects {
+	apply plugin: 'java'
+	apply plugin: 'eclipse'
+	apply plugin: 'spring-boot'
+	apply plugin: 'maven'
+	apply plugin: 'maven-publish'
+	
+	distTar.enabled = false
+	distZip.enabled = false
+	
+	project.group = 'salix'
+	
+	bootRepackage.enabled = false
+	
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
+
+	applicationDefaultJvmArgs = ["-Dspring.profiles.active=" + environment ] // enable cmd line "env" -> spring profiles
+	
+	if(project.hasProperty('debug')) {
+		applicationDefaultJvmArgs << "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000" // enable debugger (wait for connection on startup)
+	} else {
+		applicationDefaultJvmArgs << "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000" // enable debugger (do not wait for connection)
+	}
+	
+	configurations {
+		all*.exclude group: 'org.slf4j', module: 'slf4j-simple' // get rid of slf4j
+		all*.exclude group: 'ch.qos.logback', module: 'logback-classic' // get rid of logback-classic as it's greedy
+		all*.exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging' // exclude when using log4j
+	}
+	
+	jar {
+		baseName = project.name
+		version =  salixVersion
+	}
+	
+	springBoot {
+		mainClass = 'org.lukosan.salix.Application'
+	}
+	
+	bintray {
+		user = "$BINTRAY_USER"
+		key = "$BINTRAY_API_KEY"
+		pkg {
+			version {
+				name = '0.1.0-SNAPSHOT'
+				released  = new Date()
+			}
+		}
+	}
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.7'
+}
