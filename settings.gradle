@@ -1,7 +1,8 @@
 /* List of all related projects */
-def folders = ['salix-core', 'salix-hibernate4', 'salix-thymeleaf2', 'salix-ui', 
-    'salix-feed', 'salix-feed-instagram', 'salix-security', 'salix-security-core',
-	'salix-demo-www', 'salix-thymeleaf3' ]
+def folders = ['salix-core', 'salix-hibernate4', 'salix-ui', 'salix-fs', 
+    'salix-feed', 'salix-security', 'salix-security-core',
+    'salix-thymeleaf3', 'salix-mvc', 'salix-s3', 'salix-security-hibernate4', 
+    'salix-email' ]
 
 /* Only actually include a project if a silbing folder exists for it */
 folders.each { f ->

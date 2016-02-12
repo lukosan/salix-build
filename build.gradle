@@ -4,9 +4,9 @@ buildscript {
     }
     ext {
         springBootVersion = '1.2.7.RELEASE'
-		springCoreVersion = '4.2.0.RELEASE'
-		springSecurityVersion = '4.0.0.RELEASE'
-        salixVersion= '0.1.0-SNAPSHOT'
+	springCoreVersion = '4.2.0.RELEASE'
+	springSecurityVersion = '4.0.0.RELEASE'
+        salixVersion = '1.0.0-M1'
     }
     dependencies {
         // spring boot
@@ -15,11 +15,12 @@ buildscript {
 }
 
 plugins {
-	id "com.jfrog.bintray" version "1.3.1"
+	id "com.jfrog.bintray" version "1.5"
 }
 
 ext {
 	environment = project.hasProperty('env') ? env : 'dev'
+	salixVersion = '1.0.0-M1'
 }
 
 allprojects {
@@ -38,11 +39,12 @@ subprojects {
 	apply plugin: 'spring-boot'
 	apply plugin: 'maven'
 	apply plugin: 'maven-publish'
+	apply plugin: 'com.jfrog.bintray'
 	
 	distTar.enabled = false
 	distZip.enabled = false
 	
-	project.group = 'salix'
+	project.group = 'org.lukosan.salix'
 	
 	bootRepackage.enabled = false
 	
@@ -71,13 +73,49 @@ subprojects {
 	springBoot {
 		mainClass = 'org.lukosan.salix.Application'
 	}
-	
+
+	task sourceJar(type: Jar) {
+    		from sourceSets.main.allSource
+    		classifier = 'sources'
+	}
+	javadoc {
+		failOnError = false
+	}
+	task javadocJar(type: Jar, dependsOn: javadoc) {
+    		classifier = 'javadoc'
+    		from javadoc.destinationDir
+	}
+	artifacts {
+		archives javadocJar
+		archives sourceJar
+	}
+
+	publishing {
+		publications {
+			MyPublication(MavenPublication) {
+				from components.java
+				groupId 'org.lukosan.salix'
+            			artifactId project.name
+            			version salixVersion
+				artifact sourceJar
+            			artifact javadocJar
+			}
+		}
+	}
 	bintray {
 		user = "$BINTRAY_USER"
 		key = "$BINTRAY_API_KEY"
+		publications = ['MyPublication']
+//		configurations = ['archives']
+		dryRun = false
+		publish = true 
 		pkg {
+			repo = 'maven'
+			name = project.name
+			licenses = ['Apache-2.0']
+			vcsUrl = 'https://github.com/lukosan/' + project.name + '.git'
 			version {
-				name = '0.1.0-SNAPSHOT'
+				name = salixVersion
 				released  = new Date()
 			}
 		}
